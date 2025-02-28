@@ -1,0 +1,277 @@
+[
+    {
+        "id": "f9166cd8064c9351",
+        "type": "tab",
+        "label": "Flujo 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "84559c206bd7ef2f",
+        "type": "ui_button",
+        "z": "f9166cd8064c9351",
+        "name": "",
+        "group": "a8ea8d3e73e31668",
+        "order": 6,
+        "width": 4,
+        "height": 2,
+        "passthru": false,
+        "label": "Enviar",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "",
+        "topicType": "str",
+        "x": 190,
+        "y": 380,
+        "wires": [
+            [
+                "30c3ae4e1e2de292",
+                "93aacb954286ebbf"
+            ]
+        ]
+    },
+    {
+        "id": "7f5cf6ce163aebbe",
+        "type": "ui_text",
+        "z": "f9166cd8064c9351",
+        "group": "a8ea8d3e73e31668",
+        "order": 10,
+        "width": 8,
+        "height": 5,
+        "name": "",
+        "label": "Mensaje enviado:",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": "",
+        "color": "#000000",
+        "x": 610,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "bfd193874bf4f014",
+        "type": "change",
+        "z": "f9166cd8064c9351",
+        "name": "Guardar mensaje",
+        "rules": [
+            {
+                "t": "set",
+                "p": "mensaje",
+                "pt": "flow",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "x": 430,
+        "y": 160,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "30c3ae4e1e2de292",
+        "type": "change",
+        "z": "f9166cd8064c9351",
+        "name": "Recuperar mensaje",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "mensaje",
+                "tot": "flow"
+            }
+        ],
+        "x": 390,
+        "y": 380,
+        "wires": [
+            [
+                "7f5cf6ce163aebbe"
+            ]
+        ]
+    },
+    {
+        "id": "02f3085fb3a3e3f4",
+        "type": "ui_text_input",
+        "z": "f9166cd8064c9351",
+        "name": "",
+        "label": "",
+        "tooltip": "Escribe tu mensaje",
+        "group": "a8ea8d3e73e31668",
+        "order": 2,
+        "width": 8,
+        "height": 4,
+        "passthru": true,
+        "mode": "text",
+        "delay": "1000",
+        "topic": "",
+        "sendOnBlur": true,
+        "className": "",
+        "topicType": "str",
+        "x": 180,
+        "y": 160,
+        "wires": [
+            [
+                "bfd193874bf4f014"
+            ]
+        ]
+    },
+    {
+        "id": "93aacb954286ebbf",
+        "type": "change",
+        "z": "f9166cd8064c9351",
+        "name": "Borrar input",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "",
+                "tot": "str"
+            }
+        ],
+        "x": 210,
+        "y": 260,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d2888362a55cc477",
+        "type": "ui_spacer",
+        "z": "f9166cd8064c9351",
+        "name": "spacer",
+        "group": "a8ea8d3e73e31668",
+        "order": 1,
+        "width": 2,
+        "height": 1
+    },
+    {
+        "id": "8440b9626a6b5b0f",
+        "type": "ui_spacer",
+        "z": "f9166cd8064c9351",
+        "name": "spacer",
+        "group": "a8ea8d3e73e31668",
+        "order": 3,
+        "width": 2,
+        "height": 1
+    },
+    {
+        "id": "9cc1df19b4d4a630",
+        "type": "ui_spacer",
+        "z": "f9166cd8064c9351",
+        "name": "spacer",
+        "group": "a8ea8d3e73e31668",
+        "order": 4,
+        "width": 2,
+        "height": 1
+    },
+    {
+        "id": "962caa7b2f350f6b",
+        "type": "ui_spacer",
+        "z": "f9166cd8064c9351",
+        "name": "spacer",
+        "group": "a8ea8d3e73e31668",
+        "order": 5,
+        "width": 2,
+        "height": 1
+    },
+    {
+        "id": "747dc60591b7ce3e",
+        "type": "ui_spacer",
+        "z": "f9166cd8064c9351",
+        "name": "spacer",
+        "group": "a8ea8d3e73e31668",
+        "order": 7,
+        "width": 6,
+        "height": 1
+    },
+    {
+        "id": "51cdda8a9be2149d",
+        "type": "ui_spacer",
+        "z": "f9166cd8064c9351",
+        "name": "spacer",
+        "group": "a8ea8d3e73e31668",
+        "order": 8,
+        "width": 6,
+        "height": 1
+    },
+    {
+        "id": "f61be3f52882e2e0",
+        "type": "ui_spacer",
+        "z": "f9166cd8064c9351",
+        "name": "spacer",
+        "group": "a8ea8d3e73e31668",
+        "order": 9,
+        "width": 2,
+        "height": 1
+    },
+    {
+        "id": "04c410a21f16d415",
+        "type": "ui_spacer",
+        "z": "f9166cd8064c9351",
+        "name": "spacer",
+        "group": "a8ea8d3e73e31668",
+        "order": 11,
+        "width": 2,
+        "height": 1
+    },
+    {
+        "id": "30564f1f0c79a8c6",
+        "type": "ui_spacer",
+        "z": "f9166cd8064c9351",
+        "name": "spacer",
+        "group": "a8ea8d3e73e31668",
+        "order": 12,
+        "width": 2,
+        "height": 1
+    },
+    {
+        "id": "fd8bf262f5442fe1",
+        "type": "ui_spacer",
+        "z": "f9166cd8064c9351",
+        "name": "spacer",
+        "group": "a8ea8d3e73e31668",
+        "order": 13,
+        "width": 2,
+        "height": 1
+    },
+    {
+        "id": "dda011014b5b8eaf",
+        "type": "ui_spacer",
+        "z": "f9166cd8064c9351",
+        "name": "spacer",
+        "group": "a8ea8d3e73e31668",
+        "order": 14,
+        "width": 2,
+        "height": 1
+    },
+    {
+        "id": "a8ea8d3e73e31668",
+        "type": "ui_group",
+        "name": "texto1",
+        "tab": "6cc275a0d70e8667",
+        "order": 1,
+        "disp": true,
+        "width": "10",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "6cc275a0d70e8667",
+        "type": "ui_tab",
+        "name": "Maquina CNC",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]

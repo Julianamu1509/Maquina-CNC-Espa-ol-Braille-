@@ -1,0 +1,19 @@
+[
+    {
+        "id": "debug_response",
+        "type": "debug",
+        "z": "1a2b3c4d5e6f",
+        "name": "Respuesta de ESP32",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 560,
+        "y": 320,
+        "wires": []
+    }
+]

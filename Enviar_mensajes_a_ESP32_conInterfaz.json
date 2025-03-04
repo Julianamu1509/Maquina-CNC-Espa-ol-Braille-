@@ -1,0 +1,237 @@
+[
+    {
+        "id": "5753bcd3efcd6eb7",
+        "type": "tab",
+        "label": "Flujo 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "5d16afa5e398132f",
+        "type": "ui_text_input",
+        "z": "5753bcd3efcd6eb7",
+        "name": "",
+        "label": "",
+        "tooltip": "Escribe tu mensaje",
+        "group": "a8ea8d3e73e31668",
+        "order": 2,
+        "width": 8,
+        "height": 4,
+        "passthru": true,
+        "mode": "text",
+        "delay": "1000",
+        "topic": "",
+        "sendOnBlur": true,
+        "className": "",
+        "topicType": "str",
+        "x": 160,
+        "y": 100,
+        "wires": [
+            [
+                "023a41f3279efdf2"
+            ]
+        ]
+    },
+    {
+        "id": "023a41f3279efdf2",
+        "type": "change",
+        "z": "5753bcd3efcd6eb7",
+        "name": "Guardar mensaje",
+        "rules": [
+            {
+                "t": "set",
+                "p": "mensaje",
+                "pt": "flow",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "x": 370,
+        "y": 100,
+        "wires": [
+            [
+                "784a80ea42cd6eaf"
+            ]
+        ]
+    },
+    {
+        "id": "784a80ea42cd6eaf",
+        "type": "ui_button",
+        "z": "5753bcd3efcd6eb7",
+        "name": "",
+        "group": "a8ea8d3e73e31668",
+        "order": 6,
+        "width": 4,
+        "height": 2,
+        "passthru": false,
+        "label": "Enviar",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "",
+        "topicType": "str",
+        "x": 130,
+        "y": 200,
+        "wires": [
+            [
+                "7037ca0eb862b285",
+                "27827176e195e798"
+            ]
+        ]
+    },
+    {
+        "id": "7037ca0eb862b285",
+        "type": "change",
+        "z": "5753bcd3efcd6eb7",
+        "name": "Recuperar mensaje",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "mensaje",
+                "tot": "flow"
+            }
+        ],
+        "x": 330,
+        "y": 200,
+        "wires": [
+            [
+                "f0f268e1a9872fad",
+                "ef7f435806ca366b"
+            ]
+        ]
+    },
+    {
+        "id": "f0f268e1a9872fad",
+        "type": "ui_text",
+        "z": "5753bcd3efcd6eb7",
+        "group": "a8ea8d3e73e31668",
+        "order": 10,
+        "width": 8,
+        "height": 5,
+        "name": "",
+        "label": "Mensaje enviado:",
+        "format": "{{msg.payload}}",
+        "layout": "row-left",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": "",
+        "color": "#000000",
+        "x": 590,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "27827176e195e798",
+        "type": "change",
+        "z": "5753bcd3efcd6eb7",
+        "name": "Borrar input",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "",
+                "tot": "str"
+            }
+        ],
+        "x": 170,
+        "y": 280,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "http_request",
+        "type": "http request",
+        "z": "5753bcd3efcd6eb7",
+        "name": "Solicitud a ESP32",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "http://192.168.80.92/datos",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [
+            {
+                "keyType": "Content-Type",
+                "keyValue": "",
+                "valueType": "text/plain",
+                "valueValue": ""
+            }
+        ],
+        "x": 370,
+        "y": 400,
+        "wires": [
+            [
+                "debug_response"
+            ]
+        ]
+    },
+    {
+        "id": "debug_response",
+        "type": "debug",
+        "z": "5753bcd3efcd6eb7",
+        "name": "Respuesta de ESP32",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 600,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "ef7f435806ca366b",
+        "type": "function",
+        "z": "5753bcd3efcd6eb7",
+        "name": "function 1",
+        "func": "return { payload: msg.payload };\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 180,
+        "y": 400,
+        "wires": [
+            [
+                "http_request"
+            ]
+        ]
+    },
+    {
+        "id": "a8ea8d3e73e31668",
+        "type": "ui_group",
+        "name": "texto1",
+        "tab": "6cc275a0d70e8667",
+        "order": 1,
+        "disp": true,
+        "width": "10",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "6cc275a0d70e8667",
+        "type": "ui_tab",
+        "name": "Maquina CNC",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]

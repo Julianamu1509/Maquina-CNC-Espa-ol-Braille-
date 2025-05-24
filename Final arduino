@@ -1,0 +1,386 @@
+#include <WiFi.h>
+#include <WebServer.h>
+#include <ESP32Servo.h>
+
+// Configuración WiFi
+const char* ssid = "iPhone";
+const char* password = "123456789";
+WebServer server(80);
+
+// Definición de pines
+#define dirPin_m1 21
+#define stepPin_m1 22
+#define reset_m1 23
+#define dirPin_m2 18
+#define stepPin_m2 19
+#define reset_m2 23
+
+Servo miServo;
+
+// Variables de estado
+int renglon = 0;
+int letras = 0;
+int renglo = 0;
+int letra = 0;
+int ret1 = 0 ;
+int ret2 = 0;
+String mensajeBuffer = "";
+int currentCharIndex = 0;
+
+
+// Prototipos de funciones
+void handlePost();
+void siguiente();
+void volver();
+void der();
+void izq();
+void up();
+void down();
+void velocidad();
+void servo();
+void servoarriba();
+void servoabajo();
+void inicio();
+void processMessage();
+void abc(char letra);
+void vel();
+void esp();
+void fill();
+void izqq();
+void derr();
+
+void setup() {
+  inicio();
+  Serial.begin(115200);
+  
+  // Conexión WiFi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  
+  Serial.println("\nConectado a WiFi!");
+  Serial.print("Dirección IP: ");
+  Serial.println(WiFi.localIP());
+  
+  server.on("/datos", HTTP_POST, handlePost);
+  server.begin();
+}
+
+void loop() {
+  server.handleClient();
+  processMessage();
+}
+
+// Función para manejar POST desde Node-RED
+void handlePost() {
+  if (server.hasArg("plain")) {
+    mensajeBuffer = server.arg("plain");
+    mensajeBuffer.trim();
+    currentCharIndex = 0;
+    renglon = 0;
+    letras = 0;
+    
+    Serial.print("Mensaje recibido: ");
+    Serial.println(mensajeBuffer);
+    
+    server.send(200, "text/plain", "Mensaje recibido correctamente");
+  } else {
+    server.send(400, "text/plain", "No se recibió mensaje");
+  }
+}
+
+// Procesa el mensaje caracter por caracter
+/*void processMessage() {
+  if (mensajeBuffer.length() == 0 || currentCharIndex >= mensajeBuffer.length()) {
+    return;
+  }
+
+  if (renglon  && renglo < 20) {
+    if (letras && letra< 24) {
+      char currentChar = mensajeBuffer.charAt(currentCharIndex);
+      Serial.print("Procesando caracter: ");
+      Serial.println(currentChar);
+      
+      Abc(currentChar);
+      
+      currentCharIndex++;
+      letras++;
+      letra++;      
+      // Pequeña pausa entre caracteres
+      delay(800);
+    } else {
+      siguiente();
+      letras = 0;
+      renglon++;
+      renglo++;
+    }
+  } else {
+    volver();
+    renglon = 0;
+    letras = 0;
+    currentCharIndex = 0;
+    mensajeBuffer = "";
+  }
+  
+
+}
+*/
+void processMessage() {
+  // Si no hay mensaje o ya se terminó de procesar
+  if (mensajeBuffer.length() == 0 || currentCharIndex >= mensajeBuffer.length()) {
+    if (mensajeBuffer.length() > 0) {
+      Serial.println("Mensaje completo. Volviendo al inicio...");
+      final();  // Mueve el cabezal a la parte superior izquierda
+      
+      // Reiniciar variables
+      renglon = 0;
+      renglo = 0;
+      letras = 0;
+      letra = 0;
+      currentCharIndex = 0;
+      mensajeBuffer = "";
+    }
+    return;
+  }
+
+  // Mientras no se hayan completado los 20 renglones
+  if (renglon < 20) {
+    // Mientras no se hayan impreso 24 caracteres en esta línea
+    if (letras < 24) {
+      char currentChar = mensajeBuffer.charAt(currentCharIndex);
+      Serial.print("Procesando caracter: ");
+      Serial.println(currentChar);
+
+      Abc(currentChar);  // Ejecuta el patrón del carácter
+
+      currentCharIndex++;
+      letras++;
+      letra++;
+
+      delay(800);  // Pausa entre letras
+
+    } else {
+      // Se completó un renglón, bajar a siguiente
+      siguiente();
+      letras = 0;
+      renglon++;
+      renglo++;
+    }
+  }
+}
+
+
+
+// Implementación optimizada de la librería ABC
+const char* const patterns[] = {
+  "PIIFDD ",    // a (0)
+  "PIPIFDD ",   // b (1)
+  "PIIFDDP ",    // c (2) 
+  "PIIFDPDP ",  // d (3)
+  "PIIFDPD ",   // e (4)
+  "PIPIFDDP ",  // f (5)
+  "PIPIFDPDP ", // g (6)
+  "PIPIFDPD ",  // h (7)
+  "IPIFDDP ",    // i (8) 
+  "IPIFDPDP ",  // j (9)
+  "PIIPFDD ",  // k (10) 
+  "PIPIPFDD ",  // l (11)
+  "PIIPFDDP ", // m (12) 
+  "PIIPFDPDP ",// n (13) 
+  "PIIPFDPD ", // o (14)
+  "PIPIPFDDP ", // p (15) 
+  "PIPIPFDPDP ",// q (16) 
+  "PIPIPFDPD ", // r (17)
+  "IPIPFDDP ",  // s (18)
+  "IPIPFDPDP ", // t (19)
+  "PIIPFPDD ", // u (20) 
+  "PIPIPFPDD ", // v (21)
+  "IPIFPDPDP ", // w (22)
+  "PIIPFPDDP ",// x (23) 
+  "PIIPFPDPDP ",// y (24) //corregido
+  "PIIPFPDPD ",// z (25) 
+ /* "PIPIFPDPDP" Ñ
+ "PIPIPFDPDP ",// á (27)
+  "IPIPFPDPDP ",// é (28)
+  "IIPFDDP ",   // í (29)
+  "IIPFPDDP ",  // ó (30)
+  "IPIPFPDPDP ",// ú (31)*/
+  "IPIPFPDD ",  // ' (26) corregido
+  "IPIPFDPD ",  // ¡! (27)
+  "IPIFPDD ", // ¿? (28) corregido
+  "PIPIFPDD ", // ( (29) corregido
+  "IIPFDPDP ", // ) (30) corregido
+  "IPIPFDPD ",  // + (31)
+  "IPIPFPDD ",  // * (32)
+  "IPIPFPDPD ", // = (33)
+  "IIPFPDD ",   // - (34) corregido
+  "IIPFPDPDP ", // # numero (35)
+  "IIFPDP ",    // mayusculas (36)
+  "IIPFDD ",  // . (37) corregido
+  "IPIFDD ",    // , (38)
+  "PIPIPFDD ",  // ; (39)
+  "IPIFDPD ",   // : (40)
+  "IIPFPDP ",   // _ (41)
+  "esp2",       //   (42)
+
+};
+
+int mapCharToIndex(char letra) {
+  if (letra >= 'a' && letra <= 'z') return letra - 'a';
+  if (letra >= 'A' && letra <= 'Z') return letra - 'A';
+
+  switch(letra) {
+  /* case 'á': case 'Á': return 27;
+    case 'é': case 'É': return 28;
+    case 'í': case 'Í': return 29;
+    case 'ó': case 'Ó': return 30;
+    case 'ú': case 'Ú': return 31;*/
+    case '\'': return 26;
+    case '!': case '¡': return 27;
+    case '?': case '¿': return 28;
+    case '(': return 29;
+    case ')': return 30;
+    case '+': return 31;
+    case '*': return 32;
+    case '=': return 33;
+    case '-': return 34;
+    case '#': return 35;
+    case '^': return 36;
+    case '.': return 37;
+    case ',': return 38;
+    case ';': return 39;
+    case ':': return 40;
+    case '_': return 41;
+    case ' ': esp2();
+
+    case '1': return 0;
+    case '2': return 1;
+    case '3': return 2;
+    case '4': return 3;
+    case '5': return 4;
+    case '6': return 5;
+    case '7': return 6;
+    case '8': return 7;
+    case '9': return 8;
+  }
+  
+  return -1;
+}
+
+void Abc(char letra) {
+  int index = mapCharToIndex(letra);
+  if (index < 0 || index >= sizeof(patterns)/sizeof(patterns[0])) {
+    return;
+  }
+
+  const char* actions = patterns[index];
+  while (*actions != '\0') {
+    switch (*actions++) {
+      case 'P': servo(); break;
+      case 'I': izqq(); break;
+      case 'D': derr(); break;
+      case 'F': fill(); break;
+      case ' ': esp(); break;
+    }
+  }
+}
+
+inline void izqq() { izq(); vel(); }
+inline void derr() { der(); vel(); }
+inline void fill() { up(); vel(); }
+
+void final(){
+  ret1=letra*40;
+  ret2=renglo*120;
+  der();
+  for (int i = 0; i < ret2; i++) { velocidad(); }
+  down();
+  for (int i = 0; i < ret1; i++) { velocidad(); }
+  ret1= 0 ;
+  ret2= 0 ;  
+  letra= 0 ;
+  renglo= 0 ;
+
+}
+
+void esp() { //  espacio entre caracteres
+  up(); 
+  for (int i = 0; i < 14; i++) { velocidad(); } 
+  delay(1000); 
+}
+
+void esp2() { // espacio entre letras
+  up(); 
+  for (int i = 0; i < 14; i++) { velocidad(); } 
+  delay(1000); 
+}
+
+
+inline void vel() {
+  for (int i = 0; i < 20; i++) { velocidad(); }
+  delay(1000);
+}
+// Funciones de movimiento CNC
+void siguiente(){
+  izq();
+  for (int i = 0; i < 57; i++) { velocidad(); }
+  down();
+  for (int i = 0; i < 700; i++) { velocidad(); }
+}
+
+void volver(){
+  down();
+  for (int i = 0; i < 1200 ; i++) { velocidad(); }
+  der();
+  for (int i = 0; i < 672; i++) { velocidad(); }
+}
+
+void der(){
+  digitalWrite(dirPin_m1, HIGH);
+  digitalWrite(dirPin_m2, HIGH);
+}
+
+void izq(){
+  digitalWrite(dirPin_m1, LOW);
+  digitalWrite(dirPin_m2, LOW);
+}
+
+void up(){
+  digitalWrite(dirPin_m1, LOW);
+  digitalWrite(dirPin_m2, HIGH);
+}
+
+void down() {
+  digitalWrite(dirPin_m1, HIGH);
+  digitalWrite(dirPin_m2, LOW);
+}
+
+void velocidad() {
+  digitalWrite(stepPin_m1, HIGH);
+  digitalWrite(stepPin_m2, HIGH);
+  delayMicroseconds(1000);
+  digitalWrite(stepPin_m1, LOW);
+  digitalWrite(stepPin_m2, LOW);
+  delayMicroseconds(1000);
+}
+
+void servo(){
+  miServo.write(180);
+  delay(300);
+  miServo.write(0);
+  delay(350);
+}
+
+void inicio(){
+  pinMode(dirPin_m1, OUTPUT);
+  pinMode(stepPin_m1, OUTPUT);
+  pinMode(reset_m1, OUTPUT);
+  pinMode(dirPin_m2, OUTPUT);
+  pinMode(stepPin_m2, OUTPUT);
+  pinMode(reset_m2, OUTPUT);
+  miServo.attach(5);
+  digitalWrite(reset_m1, HIGH);
+  digitalWrite(reset_m2, HIGH);
+}

@@ -1,0 +1,428 @@
+[
+    {
+        "id": "4f8794e61682b3e2",
+        "type": "tab",
+        "label": "Flujo 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "8dae229965ae7c24",
+        "type": "http request",
+        "z": "4f8794e61682b3e2",
+        "name": "Solicitud a ESP32",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "http://172.20.10.2/datos",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [
+            {
+                "keyType": "Content-Type",
+                "keyValue": "",
+                "valueType": "text/plain",
+                "valueValue": ""
+            }
+        ],
+        "x": 370,
+        "y": 400,
+        "wires": [
+            [
+                "c2809567e81d7780"
+            ]
+        ]
+    },
+    {
+        "id": "c2809567e81d7780",
+        "type": "debug",
+        "z": "4f8794e61682b3e2",
+        "name": "Respuesta de ESP32",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 600,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "c730c87d650e7092",
+        "type": "function",
+        "z": "4f8794e61682b3e2",
+        "name": "Convertir a Buffer",
+        "func": "msg.payload = Buffer.from(msg.payload);\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 330,
+        "y": 500,
+        "wires": [
+            [
+                "37cb447b68bc8f39"
+            ]
+        ]
+    },
+    {
+        "id": "37cb447b68bc8f39",
+        "type": "function",
+        "z": "4f8794e61682b3e2",
+        "name": "Extraer Texto del PDF",
+        "func": "const pdf = global.get('pdfParse');\n\nif (!pdf) {\n    node.error(\"El módulo pdf-parse no está cargado en global.\");\n    return null;\n}\n\nreturn pdf(msg.payload).then(data => {\n    msg.payload = data.text;\n    return msg;\n});",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 500,
+        "wires": [
+            [
+                "8dae229965ae7c24",
+                "23b180335623adcb"
+            ]
+        ]
+    },
+    {
+        "id": "6c473ee37ab3b411",
+        "type": "ui_upload",
+        "z": "4f8794e61682b3e2",
+        "group": "a8ea8d3e73e31668",
+        "title": "",
+        "accept": ".pdf",
+        "name": "  ",
+        "order": 3,
+        "width": 10,
+        "height": 5,
+        "chunk": 256,
+        "transfer": "binary",
+        "x": 150,
+        "y": 500,
+        "wires": [
+            [
+                "c730c87d650e7092"
+            ]
+        ]
+    },
+    {
+        "id": "guardar-mensaje",
+        "type": "function",
+        "z": "4f8794e61682b3e2",
+        "name": "Guardar y traducir mensaje",
+        "func": "// Tabla básica de Braille\nconst brailleMap = {\n    // Letras minúsculas\n    'a': '⠁', 'b': '⠃', 'c': '⠉', 'd': '⠙', 'e': '⠑',\n    'f': '⠋', 'g': '⠛', 'h': '⠓', 'i': '⠊', 'j': '⠚',\n    'k': '⠅', 'l': '⠇', 'm': '⠍', 'n': '⠝', 'o': '⠕',\n    'p': '⠏', 'q': '⠟', 'r': '⠗', 's': '⠎', 't': '⠞',\n    'u': '⠥', 'v': '⠧', 'w': '⠺', 'x': '⠭', 'y': '⠽',\n    'z': '⠵', 'ñ': '⠻',\n\n    // Letras mayúsculas (indicador de mayúscula ⠨)\n    'A': '⠨⠁', 'B': '⠨⠃', 'C': '⠨⠉', 'D': '⠨⠙', 'E': '⠨⠑',\n    'F': '⠨⠋', 'G': '⠨⠛', 'H': '⠨⠓', 'I': '⠨⠊', 'J': '⠨⠚',\n    'K': '⠨⠅', 'L': '⠨⠇', 'M': '⠨⠍', 'N': '⠨⠝', 'O': '⠨⠕',\n    'P': '⠨⠏', 'Q': '⠨⠟', 'R': '⠨⠗', 'S': '⠨⠎', 'T': '⠨⠞',\n    'U': '⠨⠥', 'V': '⠨⠧', 'W': '⠨⠺', 'X': '⠨⠭', 'Y': '⠨⠽',\n    'Z': '⠨⠵', 'Ñ': '⠨⠻',\n\n    // Números (braille para a-j)\n    '1': '⠁', '2': '⠃', '3': '⠉', '4': '⠙', '5': '⠑',\n    '6': '⠋', '7': '⠛', '8': '⠓', '9': '⠊', '0': '⠚',\n\n    // Acentos\n    'á': '⠷', 'é': '⠮', 'í': '⠌', 'ó': '⠬', 'ú': '⠾',\n    'Á': '⠨⠷', 'É': '⠨⠮', 'Í': '⠨⠌', 'Ó': '⠨⠬', 'Ú': '⠨⠾',\n\n    // Puntuación y símbolos\n    '+': '⠦', '*': '⠡', '=': '⠶', ',': '⠂', ';': '⠆', ':': '⠒',\n    '.': '⠄', '¡': '⠖', '!': '⠖', '¿': '⠢', '?': '⠢',\n    '(': '⠣', ')': '⠜', '-': '⠤', '_': '⠤', '\"': '⠦', '\\'': '⠦',\n    '\\\\': '⠳', '@': '⠈⠁', '#': '⠼', '&': '⠯', '%': '⠨⠴',\n    '$': '⠈⠎', '/': '⠌', '<': '⠐⠣', '>': '⠐⠜', '≤': '⠰⠣',\n    '≥': '⠰⠜', '≠': '⠘⠿', '√': '⠩', '^': '⠘', 'π': '⠏⠊',\n    '∞': '⠼⠲⠲', '∑': '⠰⠎', '∫': '⠰⠊', ' ': ' ', '|': '⠸⠒',\n    '\\n': '\\n'\n};\n\n// Texto original\nlet originalText = msg.payload; // conservar mayúsculas\n\n// Texto invertido por palabra (solo para mostrar, no para Braille)\nlet palabrasInvertidas = originalText\n    .split(' ')\n    .map(palabra => palabra.split('').reverse().join(''))\n    .join(' ');\n\n// Convertir texto original a Braille\nlet brailleText = '';\nlet enNumero = false;\n\nfor (let char of originalText) {\n    if (char >= '0' && char <= '9') {\n        if (!enNumero) {\n            brailleText += '⠼';  // Indicador de número al iniciar\n            enNumero = true;\n        }\n        brailleText += brailleMap[char] || '';\n    } else {\n        enNumero = false;\n        brailleText += brailleMap[char] || '';\n    }\n}\n\n// Guardar en el contexto\nflow.set('textoOriginal', originalText);\nflow.set('textoInvertido', palabrasInvertidas);\nflow.set('textoBraille', brailleText);\n\n// Enviar mensaje de salida\nmsg.payload = {\n    original: originalText,\n    invertido: palabrasInvertidas,\n    braille: brailleText\n};\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 440,
+        "y": 160,
+        "wires": [
+            [
+                "boton-recuperar"
+            ]
+        ]
+    },
+    {
+        "id": "boton-recuperar",
+        "type": "ui_button",
+        "z": "4f8794e61682b3e2",
+        "name": "",
+        "group": "936a1af1e7e70fee",
+        "order": 3,
+        "width": 3,
+        "height": 2,
+        "passthru": false,
+        "label": "",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "",
+        "topicType": "str",
+        "x": 150,
+        "y": 260,
+        "wires": [
+            [
+                "recuperar-mensaje",
+                "df38e59c1e8a743a"
+            ]
+        ]
+    },
+    {
+        "id": "recuperar-mensaje",
+        "type": "function",
+        "z": "4f8794e61682b3e2",
+        "name": "Recuperar mensaje guardado",
+        "func": "// Recupera los textos del contexto del flujo\nlet originalText = flow.get('textoOriginal') || 'No hay texto guardado';\nlet brailleText = flow.get('textoBraille') || 'No hay traducción guardada';\n\nmsg.payload = { original: originalText, braille: brailleText };\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 410,
+        "y": 260,
+        "wires": [
+            [
+                "bed02d7c20b4883f",
+                "4292eeb8815022fe"
+            ]
+        ]
+    },
+    {
+        "id": "06600fb7d4e7e350",
+        "type": "ui_template",
+        "z": "4f8794e61682b3e2",
+        "group": "a8ea8d3e73e31668",
+        "name": "Entrada de Texto",
+        "order": 1,
+        "width": 10,
+        "height": 6,
+        "format": "<md-card>\n    <md-card-content>\n        <div style=\"font-size: 22px; font-weight: bold; text-align: center; color: #FFFFFF; margin-bottom: 15px;\">\n            Ingrese el texto en español\n        </div>\n    </md-card-content>\n</md-card>\n\n<div style=\"overflow: hidden; width: 100%;\">\n    <textarea id=\"customTextarea\" style=\"width:100%; height:180px; resize: none; border: none; outline: none;\"></textarea>\n</div>\n\n<script>\n    (function(scope) {\n        document.getElementById(\"customTextarea\").addEventListener(\"input\", function() {\n            var text = this.value;\n            scope.send({ payload: text });\n        });\n    })(scope);\n</script>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 170,
+        "y": 160,
+        "wires": [
+            [
+                "guardar-mensaje"
+            ]
+        ]
+    },
+    {
+        "id": "bed02d7c20b4883f",
+        "type": "ui_template",
+        "z": "4f8794e61682b3e2",
+        "group": "0dd378c595f0d920",
+        "name": "Braile",
+        "order": 2,
+        "width": 10,
+        "height": 6,
+        "format": "<md-card>\n    <md-card-content>\n        <div style=\"font-size: 22px; font-weight: bold; text-align: center; color: #FFFFFF; margin-bottom: 25px;\">\n            Texto en Braille\n        </div>\n        <textarea id=\"brailleTextarea\" style=\"width:100%; height:200px;\" readonly></textarea>\n    </md-card-content>\n</md-card>\n\n<script>\n    (function(scope) {\n        document.getElementById(\"customTextarea\").addEventListener(\"input\", function() {\n            var text = this.value;\n            scope.send({ payload: text });\n        });\n\n        scope.$watch('msg.payload', function(newVal) {\n            if (newVal !== undefined && newVal.braille !== undefined) {\n                document.getElementById(\"brailleTextarea\").value = newVal.braille;\n            }\n        });\n    })(scope);\n</script>\n",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 710,
+        "y": 200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "4292eeb8815022fe",
+        "type": "ui_template",
+        "z": "4f8794e61682b3e2",
+        "group": "0dd378c595f0d920",
+        "name": "Español",
+        "order": 1,
+        "width": 10,
+        "height": 6,
+        "format": "<md-card>\n    <md-card-content>\n        <div style=\"font-size: 22px; font-weight: bold; text-align: center; color: #FFFFFF; margin-bottom: 25px;\">\n            Texto original en español\n        </div>\n        <textarea id=\"originalTextarea\" style=\"width:100%; height:200px;\" readonly></textarea>\n    </md-card-content>\n</md-card>\n\n<script>\n    (function(scope) {\n        scope.$watch('msg.payload', function(newVal) {\n            if (newVal !== undefined && newVal.original !== undefined) {\n                document.getElementById(\"originalTextarea\").value = newVal.original;\n            }\n        });\n    })(scope);\n</script>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 740,
+        "y": 280,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "859ab1d7054a0d9c",
+        "type": "ui_template",
+        "z": "4f8794e61682b3e2",
+        "group": "a8ea8d3e73e31668",
+        "name": "pdf",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "format": "<md-card>\n    <md-card-content>\n        <div style=\"font-size: 22px; font-weight: bold; text-align: center; color: #FFFFFF;\">\n            Ingrese archivo PDF\n        </div>\n    </md-card-content>\n</md-card>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 150,
+        "y": 560,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "23b180335623adcb",
+        "type": "function",
+        "z": "4f8794e61682b3e2",
+        "name": "Guardar y traducir mensaje",
+        "func": "// Tabla básica de Braille\n\nconst brailleMap = {\n    // Letras minúsculas\n    'a': '⠁', 'b': '⠃', 'c': '⠉', 'd': '⠙', 'e': '⠑',\n    'f': '⠋', 'g': '⠛', 'h': '⠓', 'i': '⠊', 'j': '⠚',\n    'k': '⠅', 'l': '⠇', 'm': '⠍', 'n': '⠝', 'o': '⠕',\n    'p': '⠏', 'q': '⠟', 'r': '⠗', 's': '⠎', 't': '⠞',\n    'u': '⠥', 'v': '⠧', 'w': '⠺', 'x': '⠭', 'y': '⠽',\n    'z': '⠵', 'ñ': '⠻',\n    \n    // Letras mayúsculas (indicador de mayúscula ⠨)\n    'A': '⠨⠁', 'B': '⠨⠃', 'C': '⠨⠉', 'D': '⠨⠙', 'E': '⠨⠑',\n    'F': '⠨⠋', 'G': '⠨⠛', 'H': '⠨⠓', 'I': '⠨⠊', 'J': '⠨⠚',\n    'K': '⠨⠅', 'L': '⠨⠇', 'M': '⠨⠍', 'N': '⠨⠝', 'O': '⠨⠕',\n    'P': '⠨⠏', 'Q': '⠨⠟', 'R': '⠨⠗', 'S': '⠨⠎', 'T': '⠨⠞',\n    'U': '⠨⠥', 'V': '⠨⠧', 'W': '⠨⠺', 'X': '⠨⠭', 'Y': '⠨⠽',\n    'Z': '⠨⠵', 'Ñ': '⠨⠻',\n\n    // Números (indicador de número ⠼)\n    '1': '⠼⠁', '2': '⠼⠃', '3': '⠼⠉', '4': '⠼⠙', '5': '⠼⠑',\n    '6': '⠼⠋', '7': '⠼⠛', '8': '⠼⠓', '9': '⠼⠊', '0': '⠼⠚',\n\n    // Tildes y caracteres acentuados\n    'á': '⠷', 'é': '⠮', 'í': '⠌', 'ó': '⠬', 'ú': '⠾',\n    'Á': '⠨⠷', 'É': '⠨⠮', 'Í': '⠨⠌', 'Ó': '⠨⠬', 'Ú': '⠨⠾',\n\n    // Signos de puntuación\n    ',': '⠂', ';': '⠆', ':': '⠒', '.': '⠲', '!': '⠖',\n    '?': '⠦', '(': '⠶', ')': '⠶', '–': '⠤', '_': '⠤',\n    '\"': '⠄⠄', '\\'': '⠄', '\\\\': '⠳', '@': '⠈⠁', '#': '⠼⠻',\n    '&': '⠈⠯', '%': '⠨⠴', '$': '⠈⠎',\n\n    // Operaciones matemáticas\n    '+': '⠐⠖',  // Suma\n    '-': '⠤',     // Resta\n    '*': '⠡',     // Multiplicación\n    '/': '⠌',     // División\n    '=': '⠿',     // Igual\n    '<': '⠐⠣',   // Menor que\n    '>': '⠐⠜',   // Mayor que\n    '≤': '⠰⠣',   // Menor o igual que\n    '≥': '⠰⠜',   // Mayor o igual que\n    '≠': '⠘⠿',   // Diferente de\n    '√': '⠩',     // Raíz cuadrada\n    '^': '⠘',     // Potencia\n    'π': '⠏⠊',   // Pi\n    '∞': '⠼⠲⠲', // Infinito\n    '∑': '⠰⠎',   // Sumatoria\n    '∫': '⠰⠊',   // Integral\n\n    // Espacios y otros caracteres\n    ' ': ' ', '|': '⠸⠒', '\\n': '\\n',\n};\n\n// Texto original\nlet originalText = msg.payload.toLowerCase(); // Asegúrate de recibir texto plano\nlet brailleText = '';\n\n// Convertir a Braille\nfor (let char of originalText) {\n    brailleText += brailleMap[char] || ''; // Si no está en el mapa, ignora el carácter\n}\n\n// Guardar en contexto del flujo\nflow.set('textoOriginal', originalText);\nflow.set('textoBraille', brailleText);\n\n// Mensaje de salida\nmsg.payload = {\n    original: originalText, // Texto original\n    braille: brailleText    // Texto traducido a Braille\n};\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 600,
+        "y": 580,
+        "wires": [
+            [
+                "bed02d7c20b4883f",
+                "4292eeb8815022fe"
+            ]
+        ]
+    },
+    {
+        "id": "df38e59c1e8a743a",
+        "type": "function",
+        "z": "4f8794e61682b3e2",
+        "name": "enviar braile a esp",
+        "func": "// Recupera los textos del contexto del flujo\nlet brailleText = flow.get('textoOriginal') || 'No hay traducción guardada';\n\nmsg.payload = brailleText;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 130,
+        "y": 400,
+        "wires": [
+            [
+                "8dae229965ae7c24"
+            ]
+        ]
+    },
+    {
+        "id": "a0c2f1a8434d78a3",
+        "type": "ui_template",
+        "z": "4f8794e61682b3e2",
+        "group": "936a1af1e7e70fee",
+        "name": "Enviar",
+        "order": 7,
+        "width": 0,
+        "height": 0,
+        "format": "<md-card>\n    <md-card-content>\n        <div style=\"font-size: 22px; font-weight: bold; text-align: center; color: #FFFFFF;\">\n            ENVIAR\n        </div>\n    </md-card-content>\n</md-card>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 150,
+        "y": 600,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "fa4282942e09bd61",
+        "type": "ui_spacer",
+        "z": "4f8794e61682b3e2",
+        "name": "spacer",
+        "group": "936a1af1e7e70fee",
+        "order": 1,
+        "width": 5,
+        "height": 1
+    },
+    {
+        "id": "6f5cc981df78dde6",
+        "type": "ui_spacer",
+        "z": "4f8794e61682b3e2",
+        "name": "spacer",
+        "group": "936a1af1e7e70fee",
+        "order": 2,
+        "width": 1,
+        "height": 1
+    },
+    {
+        "id": "249165f92a834310",
+        "type": "ui_spacer",
+        "z": "4f8794e61682b3e2",
+        "name": "spacer",
+        "group": "936a1af1e7e70fee",
+        "order": 4,
+        "width": 1,
+        "height": 1
+    },
+    {
+        "id": "88aadf85d76aef67",
+        "type": "ui_spacer",
+        "z": "4f8794e61682b3e2",
+        "name": "spacer",
+        "group": "936a1af1e7e70fee",
+        "order": 5,
+        "width": 1,
+        "height": 1
+    },
+    {
+        "id": "110997d94afea47f",
+        "type": "ui_spacer",
+        "z": "4f8794e61682b3e2",
+        "name": "spacer",
+        "group": "936a1af1e7e70fee",
+        "order": 6,
+        "width": 1,
+        "height": 1
+    },
+    {
+        "id": "a8ea8d3e73e31668",
+        "type": "ui_group",
+        "name": "Texto",
+        "tab": "6cc275a0d70e8667",
+        "order": 1,
+        "disp": false,
+        "width": 10,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "936a1af1e7e70fee",
+        "type": "ui_group",
+        "name": "Enviar",
+        "tab": "6cc275a0d70e8667",
+        "order": 2,
+        "disp": false,
+        "width": 5,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "0dd378c595f0d920",
+        "type": "ui_group",
+        "name": "Mensaje enviado:",
+        "tab": "6cc275a0d70e8667",
+        "order": 4,
+        "disp": false,
+        "width": 10,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "6cc275a0d70e8667",
+        "type": "ui_tab",
+        "name": "Maquina CNC",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]
